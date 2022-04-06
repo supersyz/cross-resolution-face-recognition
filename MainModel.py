@@ -454,7 +454,7 @@ class KitModel(nn.Module):
         pool5_7x7_s1    = F.avg_pool2d(conv5_3_relu, kernel_size=(7, 7), stride=(1, 1), padding=(0,), ceil_mode=False)
         classifier_0    = pool5_7x7_s1.view(pool5_7x7_s1.size(0), -1)
         classifier_1    = self.classifier_1(classifier_0)
-        return classifier_0, classifier_1
+        return classifier_0,classifier_1
 
 
     @staticmethod

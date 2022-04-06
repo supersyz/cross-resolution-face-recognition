@@ -30,7 +30,7 @@ parser.add_argument('-ep', '--experimental-path', default='experiments_results',
 parser.add_argument('-tp', '--tensorboard-path', default='experiments_results', 
                 help='Tensorboard main log dir path')
 # Training Options
-parser.add_argument('-dp', '--dset-base-path', 
+parser.add_argument('-dp', '--dset-base-path', default='E:\datasets\vggface2_train',
                 help='Base path to datasets')
 parser.add_argument('-l', '--lambda_', default=0.1, type=float,
                 help='Lambda for features regression loss (default: 0.1)')
@@ -51,14 +51,17 @@ parser.add_argument('-cs', '--curr-step-iterations', type=int, default=35000,
                 help='Number of images for each curriculum step (default: 35000)')
 parser.add_argument('-sp', '--scheduler-patience', type=int, default=10, 
                 help='Scheduler patience (default: 10)')
-parser.add_argument('-b', '--batch-size', type=int, default=32, 
-                help='Batch size (default: 32)')
+parser.add_argument('-b', '--batch-size', type=int, default=16,
+                help='Batch size (default: 16)')
 parser.add_argument('-ba', '--batch-accumulation', type=int, default=8, 
                 help='Batch accumulation iterations (default: 8)')
 parser.add_argument('-fr', '--valid-fix-resolution', type=int, default=8, 
                 help='Resolution on validation images (default: 8)')
-parser.add_argument('-nw', '--num-workers', type=int, default=8, 
-                help='Number of workers (default: 8)')
+parser.add_argument('-nw', '--num-workers', type=int, default=0,
+                help='Number of workers (default: 0)')
+
+parser.add_argument('-o', '--only-high', action='store_true',
+                help='Use curriculum learning (default: False)')
 args = parser.parse_args()
 
 
@@ -98,23 +101,26 @@ cuda_available = torch.cuda.is_available()
 device = torch.device('cuda' if cuda_available else 'cpu')
 # ------------------------------------------------------------------------------
 
+from SE_ResNet34 import SEResNet34
 
 # ---------------- LOAD MODEL & OPTIMIZER & SCHEDULER --------------------------
-sm, tm = load_models(args.model_base_path, device, args.model_ckp)
+_, tm = load_models(args.model_base_path, device, args.model_ckp)
+sm = SEResNet34()
+
 optimizer = SGD(
-            params=sm.parameters(), 
-            lr=args.learning_rate, 
-            momentum=args.momentum, 
-            weight_decay=5e-04, 
+            params=sm.parameters(),
+            lr=args.learning_rate,
+            momentum=args.momentum,
+            weight_decay=5e-04,
             nesterov=args.nesterov
         )
 scheduler = ReduceLROnPlateau(
-                        optimizer=optimizer, 
-                        mode='min', 
+                        optimizer=optimizer,
+                        mode='min',
                         factor=0.5,
-                        patience=args.scheduler_patience, 
+                        patience=args.scheduler_patience,
                         verbose=True,
-                        min_lr=1.e-7, 
+                        min_lr=1.e-7,
                         threshold=0.1
                     )
 # ------------------------------------------------------------------------------
@@ -125,7 +131,7 @@ kwargs = {
     'batch_size': args.batch_size,
     'downsampling_prob': args.downsampling_prob,
     'curriculum': args.curriculum,
-    'curr_step_iterations': args.curr_step_iterations, 
+    'curr_step_iterations': args.curr_step_iterations,
     'algo_name': 'bilinear',
     'algo_val': PIL.Image.BILINEAR,
     'valid_fix_resolution': args.valid_fix_resolution,
@@ -133,7 +139,7 @@ kwargs = {
 }
 data_manager = VGGFace2DataManager(
                             dataset_path=args.dset_base_path,
-                            img_folders=['train', 'validation'],
+                            img_folders=['train', 'val'],
                             transforms=[get_transforms(mode='train'), get_transforms(mode='eval')],
                             device=device,
                             logging=logging,
@@ -144,6 +150,7 @@ data_manager = VGGFace2DataManager(
 
 if __name__ == '__main__':
     Trainer(
+        onlyhigh=args.o,
         student=sm, 
         teacher=tm, 
         optimizer=optimizer,
