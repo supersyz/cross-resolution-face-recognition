@@ -9,7 +9,7 @@ function [out] = test_face_identification2(perfix)
     % where each feature map's dimension should be
     % [image_number]_by_[feature_dimension]
     %perfix = 'vggface-wot-128s-woalign-224_32';
-    feature_folder = './feature/';
+    feature_folder = '../feature/';
     load([strcat(feature_folder,perfix,'gallery.mat')]);
     load([strcat(feature_folder,perfix,'probe.mat')]);
    % load([strcat(feature_folder,perfix,'distractor.mat')]);
