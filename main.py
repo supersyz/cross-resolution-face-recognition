@@ -16,7 +16,7 @@ from utils import *
 from trainer import Trainer
 from vggface2_data_manager import VGGFace2DataManager
 
-
+#python -W ignore main.py --model-base-path path_to_base_model_weight_file --dset-base-path path_to_data_folder -lp 1 -nw 4 -o
 parser = argparse.ArgumentParser("CR-FR")
 # Generic usage
 parser.add_argument('-s', '--seed', type=int, default=41, 
@@ -26,9 +26,9 @@ parser.add_argument('-bp', '--model-base-path', default='./senet50_ft_pytorch.pt
                 help='Path to base model checkpoint')
 parser.add_argument('-ckp', '--model-ckp', 
                 help='Path to fine tuned model checkpoint')
-parser.add_argument('-ep', '--experimental-path', default='./experiments_results',
+parser.add_argument('-ep', '--experimental-path', default='../experiments_results',
                 help='Output main path')
-parser.add_argument('-tp', '--tensorboard-path', default='./experiments_results',
+parser.add_argument('-tp', '--tensorboard-path', default='../experiments_results',
                 help='Tensorboard main log dir path')
 # Training Options
 parser.add_argument('-dp', '--dset-base-path', default=r'E:\datasets\vggface2_train',
@@ -108,7 +108,7 @@ device = torch.device('cuda' if cuda_available else 'cpu')
 _, tm = load_models(args.model_base_path, device, args.model_ckp)
 sm = se_resnet.se_resnet34(num_classes=8631)
 sm.to(device)
-device_ids = [0, 1,2 , 3]
+device_ids = [0, 1, 2, 3]
 sm = torch.nn.DataParallel(sm, device_ids=device_ids)
 optimizer = SGD(
             params=sm.parameters(),
