@@ -30,7 +30,7 @@ parser.add_argument('-ep', '--experimental-path', default='experiments_results',
 parser.add_argument('-tp', '--tensorboard-path', default='experiments_results', 
                 help='Tensorboard main log dir path')
 # Training Options
-parser.add_argument('-dp', '--dset-base-path', default='E:\datasets\vggface2_train',
+parser.add_argument('-dp', '--dset-base-path', default=r'E:\datasets\vggface2_train',
                 help='Base path to datasets')
 parser.add_argument('-l', '--lambda_', default=0.1, type=float,
                 help='Lambda for features regression loss (default: 0.1)')
