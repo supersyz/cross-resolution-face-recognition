@@ -71,7 +71,7 @@ class Trainer(object):
                                     best_acc, 
                                     batch_idx, 
                                     epoch, 
-                                    self._student.state_dict(), 
+                                    self._student.module.state_dict(),
                                     self._out_dir, 
                                     self._logging
                                 )

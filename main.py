@@ -11,6 +11,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from tensorboardX import SummaryWriter
 
+import se_resnet
 from utils import *
 from trainer import Trainer
 from vggface2_data_manager import VGGFace2DataManager
@@ -25,9 +26,9 @@ parser.add_argument('-bp', '--model-base-path', default='./senet50_ft_pytorch.pt
                 help='Path to base model checkpoint')
 parser.add_argument('-ckp', '--model-ckp', 
                 help='Path to fine tuned model checkpoint')
-parser.add_argument('-ep', '--experimental-path', default='experiments_results', 
+parser.add_argument('-ep', '--experimental-path', default='./experiments_results',
                 help='Output main path')
-parser.add_argument('-tp', '--tensorboard-path', default='experiments_results', 
+parser.add_argument('-tp', '--tensorboard-path', default='./experiments_results',
                 help='Tensorboard main log dir path')
 # Training Options
 parser.add_argument('-dp', '--dset-base-path', default=r'E:\datasets\vggface2_train',
@@ -74,7 +75,7 @@ tmp = (
 out_dir = os.path.join(args.experimental_path, tmp)
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
-
+only_high = args.only_high
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(message)s",
@@ -101,12 +102,14 @@ cuda_available = torch.cuda.is_available()
 device = torch.device('cuda' if cuda_available else 'cpu')
 # ------------------------------------------------------------------------------
 
-from SE_ResNet34 import SEResNet34
+
 
 # ---------------- LOAD MODEL & OPTIMIZER & SCHEDULER --------------------------
 _, tm = load_models(args.model_base_path, device, args.model_ckp)
-sm = SEResNet34()
-
+sm = se_resnet.se_resnet34(num_classes=8631)
+sm.to(device)
+device_ids = [0, 1,2 , 3]
+sm = torch.nn.DataParallel(sm, device_ids=device_ids)
 optimizer = SGD(
             params=sm.parameters(),
             lr=args.learning_rate,
@@ -150,7 +153,7 @@ data_manager = VGGFace2DataManager(
 
 if __name__ == '__main__':
     Trainer(
-        onlyhigh=args.o,
+        onlyhigh=only_high,
         student=sm, 
         teacher=tm, 
         optimizer=optimizer,
